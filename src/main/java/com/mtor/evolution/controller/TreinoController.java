@@ -1,8 +1,8 @@
 package com.mtor.evolution.controller;
 
-import com.athletetrack.dto.request.TreinoRequestDTO;
-import com.athletetrack.dto.response.TreinoResponseDTO;
-import com.athletetrack.service.TreinoService;
+import com.mtor.evolution.dto.request.TreinoRequestDTO;
+import com.mtor.evolution.dto.response.TreinoResponseDTO;
+import com.mtor.evolution.service.TreinoService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;

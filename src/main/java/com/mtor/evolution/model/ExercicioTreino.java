@@ -44,5 +44,5 @@ public class ExercicioTreino extends BaseEntity {
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "dia_treino_id", nullable = false)
-    private DiaTreeino diaTreino;
+    private DiaTreino diaTreino;
 }

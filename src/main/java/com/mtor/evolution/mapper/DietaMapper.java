@@ -1,8 +1,8 @@
 package com.mtor.evolution.mapper;
 
-import com.athletetrack.dto.request.DietaRequestDTO;
-import com.athletetrack.dto.response.DietaResponseDTO;
-import com.athletetrack.model.Dieta;
+import com.mtor.evolution.dto.request.DietaRequestDTO;
+import com.mtor.evolution.dto.response.DietaResponseDTO;
+import com.mtor.evolution.model.Dieta;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;

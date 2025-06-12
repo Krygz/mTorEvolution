@@ -1,8 +1,8 @@
 package com.mtor.evolution.mapper;
 
-import com.athletetrack.dto.request.TreinoRequestDTO;
-import com.athletetrack.dto.response.TreinoResponseDTO;
-import com.athletetrack.model.Treino;
+import com.mtor.evolution.dto.request.TreinoRequestDTO;
+import com.mtor.evolution.dto.response.TreinoResponseDTO;
+import com.mtor.evolution.model.Treino;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;

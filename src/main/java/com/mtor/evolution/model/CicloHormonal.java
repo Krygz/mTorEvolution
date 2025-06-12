@@ -1,6 +1,6 @@
 package com.mtor.evolution.model;
 
-import com.athletetrack.model.enums.TipoCicloHormonal;
+import com.mtor.evolution.model.enums.TipoCicloHormonal;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;

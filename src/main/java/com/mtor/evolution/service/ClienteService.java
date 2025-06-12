@@ -1,12 +1,12 @@
 package com.mtor.evolution.service;
 
-import com.athletetrack.dto.request.ClienteRequestDTO;
-import com.athletetrack.dto.response.ClienteResponseDTO;
-import com.athletetrack.exception.ResourceNotFoundException;
-import com.athletetrack.mapper.ClienteMapper;
-import com.athletetrack.model.Cliente;
-import com.athletetrack.model.enums.Role;
-import com.athletetrack.repository.ClienteRepository;
+import com.mtor.evolution.dto.request.ClienteRequestDTO;
+import com.mtor.evolution.dto.response.ClienteResponseDTO;
+import com.mtor.evolution.exception.ResourceNotFoundException;
+import com.mtor.evolution.mapper.ClienteMapper;
+import com.mtor.evolution.model.Cliente;
+import com.mtor.evolution.model.enums.Role;
+import com.mtor.evolution.repository.ClienteRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -127,5 +127,12 @@ public class ClienteService {
     public Cliente findEntityById(Long id) {
         return clienteRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Cliente não encontrado com ID: " + id));
+    }
+
+    @Transactional(readOnly = true)
+    public ClienteResponseDTO findByEmail(String email) {
+        return clienteRepository.findByEmail(email)
+                .map(clienteMapper::toResponseDTO)
+                .orElseThrow(() -> new ResourceNotFoundException("Cliente não encontrado com email: " + email));
     }
 }

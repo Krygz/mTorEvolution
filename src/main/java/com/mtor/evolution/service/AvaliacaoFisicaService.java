@@ -1,5 +1,12 @@
 package com.mtor.evolution.service;
 
+import com.mtor.evolution.dto.request.AvaliacaoFisicaRequestDTO;
+import com.mtor.evolution.dto.response.AvaliacaoFisicaResponseDTO;
+import com.mtor.evolution.exception.ResourceNotFoundException;
+import com.mtor.evolution.mapper.AvaliacaoFisicaMapper;
+import com.mtor.evolution.model.AvaliacaoFisica;
+import com.mtor.evolution.model.Cliente;
+import com.mtor.evolution.repository.AvaliacaoFisicaRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;

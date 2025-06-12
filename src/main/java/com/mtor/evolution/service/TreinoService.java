@@ -2,8 +2,10 @@ package com.mtor.evolution.service;
 
 import com.mtor.evolution.dto.request.TreinoRequestDTO;
 import com.mtor.evolution.dto.response.TreinoResponseDTO;
+import com.mtor.evolution.exception.ResourceNotFoundException;
 import com.mtor.evolution.mapper.TreinoMapper;
 import com.mtor.evolution.model.Cliente;
+import com.mtor.evolution.model.Treino;
 import com.mtor.evolution.repository.TreinoRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

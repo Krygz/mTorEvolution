@@ -1,6 +1,7 @@
 package com.mtor.evolution.dto.response;
 
-import com.athletetrack.model.enums.Role;
+
+import com.mtor.evolution.model.enums.Role;
 import lombok.Data;
 
 import java.time.LocalDate;

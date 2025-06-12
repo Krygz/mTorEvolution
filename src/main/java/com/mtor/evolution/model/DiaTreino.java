@@ -15,7 +15,7 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class DiaTreeino extends BaseEntity {
+public class DiaTreino extends BaseEntity {
     
     @NotBlank
     @Column(name = "nome_dia", nullable = false)

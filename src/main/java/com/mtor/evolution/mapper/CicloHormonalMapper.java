@@ -1,8 +1,8 @@
 package com.mtor.evolution.mapper;
 
-import com.athletetrack.dto.request.CicloHormonalRequestDTO;
-import com.athletetrack.dto.response.CicloHormonalResponseDTO;
-import com.athletetrack.model.CicloHormonal;
+import com.mtor.evolution.dto.request.CicloHormonalRequestDTO;
+import com.mtor.evolution.dto.response.CicloHormonalResponseDTO;
+import com.mtor.evolution.model.CicloHormonal;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;

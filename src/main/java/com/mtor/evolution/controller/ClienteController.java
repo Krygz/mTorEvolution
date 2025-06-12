@@ -1,9 +1,9 @@
 package com.mtor.evolution.controller;
 
-import com.athletetrack.dto.request.ClienteRequestDTO;
-import com.athletetrack.dto.response.ClienteResponseDTO;
-import com.athletetrack.model.enums.Role;
-import com.athletetrack.service.ClienteService;
+import com.mtor.evolution.dto.request.ClienteRequestDTO;
+import com.mtor.evolution.dto.response.ClienteResponseDTO;
+import com.mtor.evolution.model.enums.Role;
+import com.mtor.evolution.service.ClienteService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;

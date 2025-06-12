@@ -1,10 +1,10 @@
 package com.mtor.evolution.controller;
 
-import com.athletetrack.dto.request.ClienteRequestDTO;
-import com.athletetrack.dto.request.LoginRequestDTO;
-import com.athletetrack.dto.response.ClienteResponseDTO;
-import com.athletetrack.dto.response.JwtResponseDTO;
-import com.athletetrack.service.AuthService;
+import com.mtor.evolution.dto.request.ClienteRequestDTO;
+import com.mtor.evolution.dto.request.LoginRequestDTO;
+import com.mtor.evolution.dto.response.ClienteResponseDTO;
+import com.mtor.evolution.dto.response.JwtResponseDTO;
+import com.mtor.evolution.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;

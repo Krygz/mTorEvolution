@@ -1,6 +1,6 @@
 package com.mtor.evolution.model;
 
-import com.athletetrack.model.enums.Role;
+import com.mtor.evolution.model.enums.Role;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

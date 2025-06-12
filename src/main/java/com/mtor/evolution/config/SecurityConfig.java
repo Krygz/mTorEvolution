@@ -1,7 +1,7 @@
 package com.mtor.evolution.config;
 
-import com.athletetrack.security.AuthTokenFilter;
-import com.athletetrack.security.UserDetailsServiceImpl;
+import com.mtor.evolution.security.AuthTokenFilter;
+import com.mtor.evolution.security.UserDetailsServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

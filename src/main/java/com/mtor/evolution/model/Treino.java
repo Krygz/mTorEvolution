@@ -41,7 +41,7 @@ public class Treino extends BaseEntity {
     private Boolean ativo = true;
     
     @OneToMany(mappedBy = "treino", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<DiaTreeino> diasTreino;
+    private List<DiaTreino> diasTreino;
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "cliente_id", nullable = false)

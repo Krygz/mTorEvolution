@@ -1,12 +1,12 @@
 package com.mtor.evolution.service;
 
-import com.athletetrack.dto.request.DietaRequestDTO;
-import com.athletetrack.dto.response.DietaResponseDTO;
-import com.athletetrack.exception.ResourceNotFoundException;
-import com.athletetrack.mapper.DietaMapper;
-import com.athletetrack.model.Cliente;
-import com.athletetrack.model.Dieta;
-import com.athletetrack.repository.DietaRepository;
+import com.mtor.evolution.dto.request.DietaRequestDTO;
+import com.mtor.evolution.dto.response.DietaResponseDTO;
+import com.mtor.evolution.exception.ResourceNotFoundException;
+import com.mtor.evolution.mapper.DietaMapper;
+import com.mtor.evolution.model.Cliente;
+import com.mtor.evolution.model.Dieta;
+import com.mtor.evolution.repository.DietaRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
