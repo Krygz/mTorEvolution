@@ -1,26 +1,23 @@
 package com.mtor.evolution.repository;
 
-import com.mtor.evolution.model.Cliente;
 import com.mtor.evolution.model.Treino;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.Optional;
 
 @Repository
 public interface TreinoRepository extends JpaRepository<Treino, Long> {
     
-    List<Treino> findByClienteOrderByCreatedAtDesc(Cliente cliente);
+    Page<Treino> findByClienteId(Long clienteId, Pageable pageable);
     
-    List<Treino> findByClienteAndAtivoTrue(Cliente cliente);
+    List<Treino> findByClienteIdAndAtivoTrue(Long clienteId);
     
-    @Query("SELECT t FROM Treino t WHERE t.cliente = :cliente AND t.ativo = true ORDER BY t.createdAt DESC LIMIT 1")
-    Optional<Treino> findCurrentTreinoByCliente(Cliente cliente);
-    
-    @Query("SELECT t FROM Treino t WHERE t.cliente.id = :clienteId ORDER BY t.createdAt DESC")
-    List<Treino> findByClienteIdOrderByCreatedAtDesc(Long clienteId);
-    
-    List<Treino> findByModalidadeContainingIgnoreCase(String modalidade);
+    @Query("SELECT t FROM Treino t WHERE t.cliente.id = :clienteId AND " +
+           "(LOWER(t.nomeProtocolo) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+           "LOWER(t.modalidade) LIKE LOWER(CONCAT('%', :search, '%')))")
+    Page<Treino> findByClienteIdAndSearch(Long clienteId, String search, Pageable pageable);
 }

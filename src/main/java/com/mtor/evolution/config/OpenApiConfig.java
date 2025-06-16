@@ -12,30 +12,27 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class OpenApiConfig {
-    
+
     @Bean
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
                 .info(new Info()
-                        .title("Athlete Management SaaS API")
+                        .title("Athlete Performance SaaS API")
                         .description("API para acompanhamento físico, dietético, hormonal e de treinos de atletas de alta performance")
                         .version("1.0.0")
                         .contact(new Contact()
-                                .name("Athlete Track Team")
-                                .email("support@athletetrack.com")
-                                .url("https://athletetrack.com"))
+                                .name("Athlete Performance Team")
+                                .email("contato@athleteperformance.com")
+                                .url("https://athleteperformance.com"))
                         .license(new License()
                                 .name("MIT License")
                                 .url("https://opensource.org/licenses/MIT")))
-                .addSecurityItem(new SecurityRequirement().addList("Bearer Authentication"))
+                .addSecurityItem(new SecurityRequirement().addList("bearerAuth"))
                 .components(new Components()
-                        .addSecuritySchemes("Bearer Authentication", createAPIKeyScheme()));
-    }
-    
-    private SecurityScheme createAPIKeyScheme() {
-        return new SecurityScheme()
-                .type(SecurityScheme.Type.HTTP)
-                .bearerFormat("JWT")
-                .scheme("bearer");
+                        .addSecuritySchemes("bearerAuth", new SecurityScheme()
+                                .type(SecurityScheme.Type.HTTP)
+                                .scheme("bearer")
+                                .bearerFormat("JWT")
+                                .description("JWT token para autenticação")));
     }
 }

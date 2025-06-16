@@ -1,138 +1,142 @@
 package com.mtor.evolution.service;
 
-import com.mtor.evolution.dto.request.ClienteRequestDTO;
-import com.mtor.evolution.dto.response.ClienteResponseDTO;
+import com.mtor.evolution.dto.ClienteRequestDTO;
+import com.mtor.evolution.dto.ClienteResponseDTO;
+import com.mtor.evolution.exception.BusinessException;
 import com.mtor.evolution.exception.ResourceNotFoundException;
-import com.mtor.evolution.mapper.ClienteMapper;
 import com.mtor.evolution.model.Cliente;
 import com.mtor.evolution.model.enums.Role;
 import com.mtor.evolution.repository.ClienteRepository;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import lombok.AllArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-
 @Service
-@RequiredArgsConstructor
-@Slf4j
-@Transactional
+@AllArgsConstructor
 public class ClienteService {
-    
+
+    private static final Logger log = LoggerFactory.getLogger(ClienteService.class);
+
     private final ClienteRepository clienteRepository;
-    private final ClienteMapper clienteMapper;
     private final PasswordEncoder passwordEncoder;
-    
-    public ClienteResponseDTO create(ClienteRequestDTO requestDTO) {
-        log.info("Criando novo cliente: {}", requestDTO.getEmail());
-        
-        if (clienteRepository.existsByEmail(requestDTO.getEmail())) {
-            throw new IllegalArgumentException("Email já está em uso");
+
+    @Transactional
+    public ClienteResponseDTO criar(ClienteRequestDTO request) {
+        log.info("Criando novo cliente com email: {}", request.email());
+
+        if (clienteRepository.existsByEmail(request.email())) {
+            throw new BusinessException("Email já está em uso");
         }
-        
-        Cliente cliente = clienteMapper.toEntity(requestDTO);
-        cliente.setSenha(passwordEncoder.encode(requestDTO.getSenha()));
-        
-        Cliente savedCliente = clienteRepository.save(cliente);
-        log.info("Cliente criado com sucesso: ID {}", savedCliente.getId());
-        
-        return clienteMapper.toResponseDTO(savedCliente);
+
+        Cliente cliente = Cliente.builder()
+                .nomeCompleto(request.nomeCompleto())
+                .email(request.email())
+                .senha(passwordEncoder.encode(request.senha()))
+                .idade(request.idade())
+                .altura(request.altura())
+                .dataNascimento(request.dataNascimento())
+                .role(Role.CLIENTE)
+                .ativo(true)
+                .build();
+
+        Cliente clienteSalvo = clienteRepository.save(cliente);
+        log.info("Cliente criado com sucesso. ID: {}", clienteSalvo.getId());
+
+        return toResponseDTO(clienteSalvo);
     }
-    
+
     @Transactional(readOnly = true)
-    public ClienteResponseDTO findById(Long id) {
+    public ClienteResponseDTO buscarPorId(Long id) {
         log.info("Buscando cliente por ID: {}", id);
         Cliente cliente = clienteRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Cliente não encontrado com ID: " + id));
-        
-        return clienteMapper.toResponseDTO(cliente);
-    }
-    
-    @Transactional(readOnly = true)
-    public Page<ClienteResponseDTO> findAll(Pageable pageable) {
-        log.info("Buscando todos os clientes - Página: {}", pageable.getPageNumber());
-        return clienteRepository.findAll(pageable)
-                .map(clienteMapper::toResponseDTO);
-    }
-    
-    @Transactional(readOnly = true)
-    public List<ClienteResponseDTO> findByRole(Role role) {
-        log.info("Buscando clientes por role: {}", role);
-        return clienteRepository.findByRole(role)
-                .stream()
-                .map(clienteMapper::toResponseDTO)
-                .toList();
-    }
-    
-    @Transactional(readOnly = true)
-    public List<ClienteResponseDTO> findActiveClientes() {
-        log.info("Buscando clientes ativos");
-        return clienteRepository.findByAtivoTrue()
-                .stream()
-                .map(clienteMapper::toResponseDTO)
-                .toList();
-    }
-    
-    public ClienteResponseDTO update(Long id, ClienteRequestDTO requestDTO) {
-        log.info("Atualizando cliente ID: {}", id);
-        
-        Cliente cliente = clienteRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Cliente não encontrado com ID: " + id));
-        
-        // Verificar se o email já está em uso por outro cliente
-        if (!cliente.getEmail().equals(requestDTO.getEmail()) && 
-            clienteRepository.existsByEmail(requestDTO.getEmail())) {
-            throw new IllegalArgumentException("Email já está em uso");
-        }
-        
-        clienteMapper.updateEntityFromDTO(requestDTO, cliente);
-        
-        // Atualizar senha apenas se fornecida
-        if (requestDTO.getSenha() != null && !requestDTO.getSenha().isEmpty()) {
-            cliente.setSenha(passwordEncoder.encode(requestDTO.getSenha()));
-        }
-        
-        Cliente updatedCliente = clienteRepository.save(cliente);
-        log.info("Cliente atualizado com sucesso: ID {}", updatedCliente.getId());
-        
-        return clienteMapper.toResponseDTO(updatedCliente);
-    }
-    
-    public void delete(Long id) {
-        log.info("Deletando cliente ID: {}", id);
-        
-        Cliente cliente = clienteRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Cliente não encontrado com ID: " + id));
-        
-        clienteRepository.delete(cliente);
-        log.info("Cliente deletado com sucesso: ID {}", id);
-    }
-    
-    public void deactivate(Long id) {
-        log.info("Desativando cliente ID: {}", id);
-        
-        Cliente cliente = clienteRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Cliente não encontrado com ID: " + id));
-        
-        cliente.setAtivo(false);
-        clienteRepository.save(cliente);
-        log.info("Cliente desativado com sucesso: ID {}", id);
-    }
-    
-    @Transactional(readOnly = true)
-    public Cliente findEntityById(Long id) {
-        return clienteRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Cliente não encontrado com ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Cliente não encontrado"));
+        return toResponseDTO(cliente);
     }
 
     @Transactional(readOnly = true)
-    public ClienteResponseDTO findByEmail(String email) {
+    public Page<ClienteResponseDTO> listarTodos(Pageable pageable) {
+        log.info("Listando todos os clientes ativos");
+        return clienteRepository.findByAtivoTrue(pageable)
+                .map(this::toResponseDTO);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<ClienteResponseDTO> buscarPorNomeOuEmail(String search, Pageable pageable) {
+        log.info("Buscando clientes por: {}", search);
+        return clienteRepository.findByAtivoTrueAndSearch(search, pageable)
+                .map(this::toResponseDTO);
+    }
+
+    @Transactional
+    public ClienteResponseDTO atualizar(Long id, ClienteRequestDTO request) {
+        log.info("Atualizando cliente ID: {}", id);
+
+        Cliente cliente = clienteRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Cliente não encontrado"));
+
+        if (!cliente.getEmail().equals(request.email()) && 
+            clienteRepository.existsByEmail(request.email())) {
+            throw new BusinessException("Email já está em uso");
+        }
+
+        cliente.setNomeCompleto(request.nomeCompleto());
+        cliente.setEmail(request.email());
+        cliente.setIdade(request.idade());
+        cliente.setAltura(request.altura());
+        cliente.setDataNascimento(request.dataNascimento());
+
+        if (request.senha() != null && !request.senha().isEmpty()) {
+            cliente.setSenha(passwordEncoder.encode(request.senha()));
+        }
+
+        Cliente clienteAtualizado = clienteRepository.save(cliente);
+        log.info("Cliente atualizado com sucesso. ID: {}", clienteAtualizado.getId());
+
+        return toResponseDTO(clienteAtualizado);
+    }
+
+    @Transactional
+    public void deletar(Long id) {
+        log.info("Deletando cliente ID: {}", id);
+
+        Cliente cliente = clienteRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Cliente não encontrado"));
+
+        cliente.setAtivo(false);
+        clienteRepository.save(cliente);
+
+        log.info("Cliente desativado com sucesso. ID: {}", id);
+    }
+
+    @Transactional(readOnly = true)
+    public Cliente buscarEntidadePorId(Long id) {
+        return clienteRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Cliente não encontrado"));
+    }
+
+    @Transactional(readOnly = true)
+    public Cliente buscarPorEmail(String email) {
         return clienteRepository.findByEmail(email)
-                .map(clienteMapper::toResponseDTO)
-                .orElseThrow(() -> new ResourceNotFoundException("Cliente não encontrado com email: " + email));
+                .orElseThrow(() -> new ResourceNotFoundException("Cliente não encontrado"));
+    }
+
+    private ClienteResponseDTO toResponseDTO(Cliente cliente) {
+        return new ClienteResponseDTO(
+                cliente.getId(),
+                cliente.getNomeCompleto(),
+                cliente.getEmail(),
+                cliente.getIdade(),
+                cliente.getAltura(),
+                cliente.getDataNascimento(),
+                cliente.getRole(),
+                cliente.getAtivo(),
+                cliente.getCreatedAt(),
+                cliente.getUpdatedAt()
+        );
     }
 }

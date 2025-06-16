@@ -1,134 +1,129 @@
 package com.mtor.evolution.service;
 
-import com.mtor.evolution.dto.request.TreinoRequestDTO;
-import com.mtor.evolution.dto.response.TreinoResponseDTO;
+import com.mtor.evolution.dto.TreinoRequestDTO;
+import com.mtor.evolution.dto.TreinoResponseDTO;
 import com.mtor.evolution.exception.ResourceNotFoundException;
-import com.mtor.evolution.mapper.TreinoMapper;
 import com.mtor.evolution.model.Cliente;
 import com.mtor.evolution.model.Treino;
 import com.mtor.evolution.repository.TreinoRepository;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import lombok.AllArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
-@RequiredArgsConstructor
-@Slf4j
-@Transactional
+@AllArgsConstructor
 public class TreinoService {
-    
+
+    private static final Logger log = LoggerFactory.getLogger(TreinoService.class);
+
     private final TreinoRepository treinoRepository;
-    private final TreinoMapper treinoMapper;
     private final ClienteService clienteService;
-    
-    public TreinoResponseDTO create(TreinoRequestDTO requestDTO) {
-        log.info("Criando novo treino para cliente ID: {}", requestDTO.getClienteId());
-        
-        Cliente cliente = clienteService.findEntityById(requestDTO.getClienteId());
-        
-        Treino treino = treinoMapper.toEntity(requestDTO);
-        treino.setCliente(cliente);
-        
-        Treino savedTreino = treinoRepository.save(treino);
-        log.info("Treino criado com sucesso: ID {}", savedTreino.getId());
-        
-        return treinoMapper.toResponseDTO(savedTreino);
+
+    @Transactional
+    public TreinoResponseDTO criar(TreinoRequestDTO request) {
+        log.info("Criando novo treino para cliente ID: {}", request.clienteId());
+
+        Cliente cliente = clienteService.buscarEntidadePorId(request.clienteId());
+
+        Treino treino = Treino.builder()
+                .nomeProtocolo(request.nomeProtocolo())
+                .modalidade(request.modalidade())
+                .dataInicio(request.dataInicio())
+                .dataFim(request.dataFim())
+                .observacoes(request.observacoes())
+                .ativo(request.ativo() != null ? request.ativo() : true)
+                .cliente(cliente)
+                .build();
+
+        Treino treinoSalvo = treinoRepository.save(treino);
+        log.info("Treino criado com sucesso. ID: {}", treinoSalvo.getId());
+
+        return toResponseDTO(treinoSalvo);
     }
-    
+
     @Transactional(readOnly = true)
-    public TreinoResponseDTO findById(Long id) {
+    public TreinoResponseDTO buscarPorId(Long id) {
         log.info("Buscando treino por ID: {}", id);
         Treino treino = treinoRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Treino não encontrado com ID: " + id));
-        
-        return treinoMapper.toResponseDTO(treino);
+                .orElseThrow(() -> new ResourceNotFoundException("Treino não encontrado"));
+        return toResponseDTO(treino);
     }
-    
+
     @Transactional(readOnly = true)
-    public Page<TreinoResponseDTO> findAll(Pageable pageable) {
-        log.info("Buscando todos os treinos - Página: {}", pageable.getPageNumber());
-        return treinoRepository.findAll(pageable)
-                .map(treinoMapper::toResponseDTO);
+    public Page<TreinoResponseDTO> listarPorCliente(Long clienteId, Pageable pageable) {
+        log.info("Listando treinos do cliente ID: {}", clienteId);
+        return treinoRepository.findByClienteId(clienteId, pageable)
+                .map(this::toResponseDTO);
     }
-    
+
     @Transactional(readOnly = true)
-    public List<TreinoResponseDTO> findByClienteId(Long clienteId) {
-        log.info("Buscando treinos por cliente ID: {}", clienteId);
-        return treinoRepository.findByClienteIdOrderByCreatedAtDesc(clienteId)
+    public Page<TreinoResponseDTO> buscarPorClienteETexto(Long clienteId, String search, Pageable pageable) {
+        log.info("Buscando treinos do cliente ID: {} com texto: {}", clienteId, search);
+        return treinoRepository.findByClienteIdAndSearch(clienteId, search, pageable)
+                .map(this::toResponseDTO);
+    }
+
+    @Transactional(readOnly = true)
+    public List<TreinoResponseDTO> listarAtivosPorCliente(Long clienteId) {
+        log.info("Listando treinos ativos do cliente ID: {}", clienteId);
+        return treinoRepository.findByClienteIdAndAtivoTrue(clienteId)
                 .stream()
-                .map(treinoMapper::toResponseDTO)
+                .map(this::toResponseDTO)
                 .toList();
     }
-    
-    @Transactional(readOnly = true)
-    public List<TreinoResponseDTO> findActiveTreinosByClienteId(Long clienteId) {
-        log.info("Buscando treinos ativos do cliente ID: {}", clienteId);
-        Cliente cliente = clienteService.findEntityById(clienteId);
-        
-        return treinoRepository.findByClienteAndAtivoTrue(cliente)
-                .stream()
-                .map(treinoMapper::toResponseDTO)
-                .toList();
-    }
-    
-    @Transactional(readOnly = true)
-    public Optional<TreinoResponseDTO> findCurrentTreinoByClienteId(Long clienteId) {
-        log.info("Buscando treino atual do cliente ID: {}", clienteId);
-        Cliente cliente = clienteService.findEntityById(clienteId);
-        
-        return treinoRepository.findCurrentTreinoByCliente(cliente)
-                .map(treinoMapper::toResponseDTO);
-    }
-    
-    @Transactional(readOnly = true)
-    public List<TreinoResponseDTO> findByModalidade(String modalidade) {
-        log.info("Buscando treinos por modalidade: {}", modalidade);
-        return treinoRepository.findByModalidadeContainingIgnoreCase(modalidade)
-                .stream()
-                .map(treinoMapper::toResponseDTO)
-                .toList();
-    }
-    
-    public TreinoResponseDTO update(Long id, TreinoRequestDTO requestDTO) {
+
+    @Transactional
+    public TreinoResponseDTO atualizar(Long id, TreinoRequestDTO request) {
         log.info("Atualizando treino ID: {}", id);
-        
+
         Treino treino = treinoRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Treino não encontrado com ID: " + id));
-        
-        treinoMapper.updateEntityFromDTO(requestDTO, treino);
-        
-        Treino updatedTreino = treinoRepository.save(treino);
-        log.info("Treino atualizado com sucesso: ID {}", updatedTreino.getId());
-        
-        return treinoMapper.toResponseDTO(updatedTreino);
+                .orElseThrow(() -> new ResourceNotFoundException("Treino não encontrado"));
+
+        treino.setNomeProtocolo(request.nomeProtocolo());
+        treino.setModalidade(request.modalidade());
+        treino.setDataInicio(request.dataInicio());
+        treino.setDataFim(request.dataFim());
+        treino.setObservacoes(request.observacoes());
+        treino.setAtivo(request.ativo());
+
+        Treino treinoAtualizado = treinoRepository.save(treino);
+        log.info("Treino atualizado com sucesso. ID: {}", treinoAtualizado.getId());
+
+        return toResponseDTO(treinoAtualizado);
     }
-    
-    public void delete(Long id) {
+
+    @Transactional
+    public void deletar(Long id) {
         log.info("Deletando treino ID: {}", id);
-        
+
         Treino treino = treinoRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Treino não encontrado com ID: " + id));
-        
-        treinoRepository.delete(treino);
-        log.info("Treino deletado com sucesso: ID {}", id);
-    }
-    
-    public TreinoResponseDTO deactivate(Long id) {
-        log.info("Desativando treino ID: {}", id);
-        
-        Treino treino = treinoRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Treino não encontrado com ID: " + id));
-        
+                .orElseThrow(() -> new ResourceNotFoundException("Treino não encontrado"));
+
         treino.setAtivo(false);
-        Treino updatedTreino = treinoRepository.save(treino);
-        log.info("Treino desativado com sucesso: ID {}", id);
-        
-        return treinoMapper.toResponseDTO(updatedTreino);
+        treinoRepository.save(treino);
+
+        log.info("Treino desativado com sucesso. ID: {}", id);
+    }
+
+    private TreinoResponseDTO toResponseDTO(Treino treino) {
+        return new TreinoResponseDTO(
+                treino.getId(),
+                treino.getNomeProtocolo(),
+                treino.getModalidade(),
+                treino.getDataInicio(),
+                treino.getDataFim(),
+                treino.getObservacoes(),
+                treino.getAtivo(),
+                treino.getCliente().getId(),
+                treino.getCliente().getNomeCompleto(),
+                treino.getCreatedAt(),
+                treino.getUpdatedAt()
+        );
     }
 }

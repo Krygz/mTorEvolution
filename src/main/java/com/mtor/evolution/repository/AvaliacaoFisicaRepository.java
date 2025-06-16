@@ -1,7 +1,9 @@
 package com.mtor.evolution.repository;
 
+
 import com.mtor.evolution.model.AvaliacaoFisica;
-import com.mtor.evolution.model.Cliente;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -13,13 +15,13 @@ import java.util.Optional;
 @Repository
 public interface AvaliacaoFisicaRepository extends JpaRepository<AvaliacaoFisica, Long> {
     
-    List<AvaliacaoFisica> findByClienteOrderByDataAvaliacaoDesc(Cliente cliente);
+    Page<AvaliacaoFisica> findByClienteId(Long clienteId, Pageable pageable);
     
-    @Query("SELECT a FROM AvaliacaoFisica a WHERE a.cliente = :cliente ORDER BY a.dataAvaliacao DESC LIMIT 1")
-    Optional<AvaliacaoFisica> findLatestByCliente(Cliente cliente);
+    List<AvaliacaoFisica> findByClienteIdOrderByDataAvaliacaoDesc(Long clienteId);
     
-    List<AvaliacaoFisica> findByClienteAndDataAvaliacaoBetween(Cliente cliente, LocalDate inicio, LocalDate fim);
+    Optional<AvaliacaoFisica> findFirstByClienteIdOrderByDataAvaliacaoDesc(Long clienteId);
     
-    @Query("SELECT a FROM AvaliacaoFisica a WHERE a.cliente.id = :clienteId ORDER BY a.dataAvaliacao DESC")
-    List<AvaliacaoFisica> findByClienteIdOrderByDataDesc(Long clienteId);
+    @Query("SELECT a FROM AvaliacaoFisica a WHERE a.cliente.id = :clienteId AND " +
+           "a.dataAvaliacao BETWEEN :dataInicio AND :dataFim ORDER BY a.dataAvaliacao DESC")
+    List<AvaliacaoFisica> findByClienteIdAndDataAvaliacaoBetween(Long clienteId, LocalDate dataInicio, LocalDate dataFim);
 }

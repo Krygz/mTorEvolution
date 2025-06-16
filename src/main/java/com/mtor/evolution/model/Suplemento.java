@@ -4,13 +4,13 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "protetores_hormonais")
+@Table(name = "suplementos")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ProtetorHormonal extends BaseEntity {
+public class Suplemento extends BaseEntity {
 
     @Column(name = "nome", nullable = false)
     private String nome;
@@ -21,13 +21,16 @@ public class ProtetorHormonal extends BaseEntity {
     @Column(name = "frequencia")
     private String frequencia;
 
-    @Column(name = "finalidade")
-    private String finalidade;
+    @Column(name = "horario")
+    private String horario;
+
+    @Column(name = "tipo")
+    private String tipo; // SUPLEMENTO, MANIPULADO
 
     @Column(name = "observacoes", columnDefinition = "TEXT")
     private String observacoes;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "ciclo_hormonal_id", nullable = false)
-    private CicloHormonal cicloHormonal;
+    @JoinColumn(name = "dieta_id", nullable = false)
+    private Dieta dieta;
 }

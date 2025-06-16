@@ -1,135 +1,126 @@
 package com.mtor.evolution.service;
 
-import com.mtor.evolution.dto.request.CicloHormonalRequestDTO;
-import com.mtor.evolution.dto.response.CicloHormonalResponseDTO;
+import com.mtor.evolution.dto.CicloHormonalRequestDTO;
+import com.mtor.evolution.dto.CicloHormonalResponseDTO;
 import com.mtor.evolution.exception.ResourceNotFoundException;
-import com.mtor.evolution.mapper.CicloHormonalMapper;
 import com.mtor.evolution.model.CicloHormonal;
 import com.mtor.evolution.model.Cliente;
-import com.mtor.evolution.model.enums.TipoCicloHormonal;
 import com.mtor.evolution.repository.CicloHormonalRepository;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import lombok.AllArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
-@RequiredArgsConstructor
-@Slf4j
-@Transactional
+@AllArgsConstructor
 public class CicloHormonalService {
-    
+
+    private static final Logger log = LoggerFactory.getLogger(CicloHormonalService.class);
+
     private final CicloHormonalRepository cicloHormonalRepository;
-    private final CicloHormonalMapper cicloHormonalMapper;
     private final ClienteService clienteService;
-    
-    public CicloHormonalResponseDTO create(CicloHormonalRequestDTO requestDTO) {
-        log.info("Criando novo ciclo hormonal para cliente ID: {}", requestDTO.getClienteId());
-        
-        Cliente cliente = clienteService.findEntityById(requestDTO.getClienteId());
-        
-        CicloHormonal cicloHormonal = cicloHormonalMapper.toEntity(requestDTO);
-        cicloHormonal.setCliente(cliente);
-        
-        CicloHormonal savedCicloHormonal = cicloHormonalRepository.save(cicloHormonal);
-        log.info("Ciclo hormonal criado com sucesso: ID {}", savedCicloHormonal.getId());
-        
-        return cicloHormonalMapper.toResponseDTO(savedCicloHormonal);
+
+    @Transactional
+    public CicloHormonalResponseDTO criar(CicloHormonalRequestDTO request) {
+        log.info("Criando novo ciclo hormonal para cliente ID: {}", request.clienteId());
+
+        Cliente cliente = clienteService.buscarEntidadePorId(request.clienteId());
+
+        CicloHormonal ciclo = CicloHormonal.builder()
+                .tipo(request.tipo())
+                .dataInicio(request.dataInicio())
+                .dataFim(request.dataFim())
+                .observacoesClinicas(request.observacoesClinicas())
+                .ativo(request.ativo() != null ? request.ativo() : true)
+                .cliente(cliente)
+                .build();
+
+        CicloHormonal cicloSalvo = cicloHormonalRepository.save(ciclo);
+        log.info("Ciclo hormonal criado com sucesso. ID: {}", cicloSalvo.getId());
+
+        return toResponseDTO(cicloSalvo);
     }
-    
+
     @Transactional(readOnly = true)
-    public CicloHormonalResponseDTO findById(Long id) {
+    public CicloHormonalResponseDTO buscarPorId(Long id) {
         log.info("Buscando ciclo hormonal por ID: {}", id);
-        CicloHormonal cicloHormonal = cicloHormonalRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Ciclo hormonal não encontrado com ID: " + id));
-        
-        return cicloHormonalMapper.toResponseDTO(cicloHormonal);
+        CicloHormonal ciclo = cicloHormonalRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Ciclo hormonal não encontrado"));
+        return toResponseDTO(ciclo);
     }
-    
+
     @Transactional(readOnly = true)
-    public Page<CicloHormonalResponseDTO> findAll(Pageable pageable) {
-        log.info("Buscando todos os ciclos hormonais - Página: {}", pageable.getPageNumber());
-        return cicloHormonalRepository.findAll(pageable)
-                .map(cicloHormonalMapper::toResponseDTO);
+    public Page<CicloHormonalResponseDTO> listarPorCliente(Long clienteId, Pageable pageable) {
+        log.info("Listando ciclos hormonais do cliente ID: {}", clienteId);
+        return cicloHormonalRepository.findByClienteId(clienteId, pageable)
+                .map(this::toResponseDTO);
     }
-    
+
     @Transactional(readOnly = true)
-    public List<CicloHormonalResponseDTO> findByClienteId(Long clienteId) {
-        log.info("Buscando ciclos hormonais por cliente ID: {}", clienteId);
-        return cicloHormonalRepository.findByClienteIdOrderByCreatedAtDesc(clienteId)
+    public Page<CicloHormonalResponseDTO> buscarPorClienteETexto(Long clienteId, String search, Pageable pageable) {
+        log.info("Buscando ciclos hormonais do cliente ID: {} com texto: {}", clienteId, search);
+        return cicloHormonalRepository.findByClienteIdAndSearch(clienteId, search, pageable)
+                .map(this::toResponseDTO);
+    }
+
+    @Transactional(readOnly = true)
+    public List<CicloHormonalResponseDTO> listarAtivosPorCliente(Long clienteId) {
+        log.info("Listando ciclos hormonais ativos do cliente ID: {}", clienteId);
+        return cicloHormonalRepository.findByClienteIdAndAtivoTrue(clienteId)
                 .stream()
-                .map(cicloHormonalMapper::toResponseDTO)
+                .map(this::toResponseDTO)
                 .toList();
     }
-    
-    @Transactional(readOnly = true)
-    public List<CicloHormonalResponseDTO> findActiveCiclosByClienteId(Long clienteId) {
-        log.info("Buscando ciclos hormonais ativos do cliente ID: {}", clienteId);
-        Cliente cliente = clienteService.findEntityById(clienteId);
-        
-        return cicloHormonalRepository.findByClienteAndAtivoTrue(cliente)
-                .stream()
-                .map(cicloHormonalMapper::toResponseDTO)
-                .toList();
-    }
-    
-    @Transactional(readOnly = true)
-    public Optional<CicloHormonalResponseDTO> findCurrentCicloByClienteId(Long clienteId) {
-        log.info("Buscando ciclo hormonal atual do cliente ID: {}", clienteId);
-        Cliente cliente = clienteService.findEntityById(clienteId);
-        
-        return cicloHormonalRepository.findCurrentCicloByCliente(cliente)
-                .map(cicloHormonalMapper::toResponseDTO);
-    }
-    
-    @Transactional(readOnly = true)
-    public List<CicloHormonalResponseDTO> findByTipoCiclo(TipoCicloHormonal tipoCiclo) {
-        log.info("Buscando ciclos hormonais por tipo: {}", tipoCiclo);
-        return cicloHormonalRepository.findByTipoCiclo(tipoCiclo)
-                .stream()
-                .map(cicloHormonalMapper::toResponseDTO)
-                .toList();
-    }
-    
-    public CicloHormonalResponseDTO update(Long id, CicloHormonalRequestDTO requestDTO) {
+
+    @Transactional
+    public CicloHormonalResponseDTO atualizar(Long id, CicloHormonalRequestDTO request) {
         log.info("Atualizando ciclo hormonal ID: {}", id);
-        
-        CicloHormonal cicloHormonal = cicloHormonalRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Ciclo hormonal não encontrado com ID: " + id));
-        
-        cicloHormonalMapper.updateEntityFromDTO(requestDTO, cicloHormonal);
-        
-        CicloHormonal updatedCicloHormonal = cicloHormonalRepository.save(cicloHormonal);
-        log.info("Ciclo hormonal atualizado com sucesso: ID {}", updatedCicloHormonal.getId());
-        
-        return cicloHormonalMapper.toResponseDTO(updatedCicloHormonal);
+
+        CicloHormonal ciclo = cicloHormonalRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Ciclo hormonal não encontrado"));
+
+        ciclo.setTipo(request.tipo());
+        ciclo.setDataInicio(request.dataInicio());
+        ciclo.setDataFim(request.dataFim());
+        ciclo.setObservacoesClinicas(request.observacoesClinicas());
+        ciclo.setAtivo(request.ativo());
+
+        CicloHormonal cicloAtualizado = cicloHormonalRepository.save(ciclo);
+        log.info("Ciclo hormonal atualizado com sucesso. ID: {}", cicloAtualizado.getId());
+
+        return toResponseDTO(cicloAtualizado);
     }
-    
-    public void delete(Long id) {
+
+    @Transactional
+    public void deletar(Long id) {
         log.info("Deletando ciclo hormonal ID: {}", id);
-        
-        CicloHormonal cicloHormonal = cicloHormonalRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Ciclo hormonal não encontrado com ID: " + id));
-        
-        cicloHormonalRepository.delete(cicloHormonal);
-        log.info("Ciclo hormonal deletado com sucesso: ID {}", id);
+
+        CicloHormonal ciclo = cicloHormonalRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Ciclo hormonal não encontrado"));
+
+        ciclo.setAtivo(false);
+        cicloHormonalRepository.save(ciclo);
+
+        log.info("Ciclo hormonal desativado com sucesso. ID: {}", id);
     }
-    
-    public CicloHormonalResponseDTO deactivate(Long id) {
-        log.info("Desativando ciclo hormonal ID: {}", id);
-        
-        CicloHormonal cicloHormonal = cicloHormonalRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Ciclo hormonal não encontrado com ID: " + id));
-        
-        cicloHormonal.setAtivo(false);
-        CicloHormonal updatedCicloHormonal = cicloHormonalRepository.save(cicloHormonal);
-        log.info("Ciclo hormonal desativado com sucesso: ID {}", id);
-        
-        return cicloHormonalMapper.toResponseDTO(updatedCicloHormonal);
+
+    private CicloHormonalResponseDTO toResponseDTO(CicloHormonal ciclo) {
+        return new CicloHormonalResponseDTO(
+                ciclo.getId(),
+                ciclo.getTipo(),
+                ciclo.getDataInicio(),
+                ciclo.getDataFim(),
+                ciclo.getObservacoesClinicas(),
+                ciclo.getAtivo(),
+                ciclo.getCliente().getId(),
+                ciclo.getCliente().getNomeCompleto(),
+                ciclo.getCreatedAt(),
+                ciclo.getUpdatedAt()
+        );
     }
 }
